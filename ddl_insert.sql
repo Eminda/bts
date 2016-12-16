@@ -92,7 +92,7 @@ create table Booking(
 	TicketNo varchar(10),
 	ScheduleID varchar(8),
 	CustomerName varchar(150) not null,
-	State varchar(10) not null,
+	State varchar(10) not null default 'Valid',
 	Nic varchar(10) not null,
 	Email varchar(150) not null,
 	Payment Numeric(4,2), 
@@ -104,6 +104,14 @@ create table Booking(
 	FOREIGN KEY(FromTown) REFERENCES Location(TownID),
 	FOREIGN KEY(ToTown) REFERENCES Location(TownID)
 );
+create table BookingSeat(
+	TicketNo varchar(10),
+	SeatNo int(3),
+	PRIMARY KEY(TicketNo),
+	FOREIGN KEY(TicketNo) REFERENCES Booking(TicketNo)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
+);
 create table Admin (
 	AdminID varchar(4),
 	Name varchar(100) unique,
@@ -111,6 +119,28 @@ create table Admin (
 	CostPerKm Numeric(4,2) not null,
 	Primary Key(AdminID)
 );
+
+create view publicBus 
+as 
+select RegNumber,phoneNumber,NoSeat,Type,wifi,haveCurtains from bus;
+
+create view user as 
+select RegNumber as userName,password,'bus' as type from  bus union 
+select Name as userName,Password as password,'admin' as type from admin union 
+select UserName as userName,Password as password,'owner' as type from busOwner;
+
+create view publicSchedule as 
+     select ScheduleID, BusJourneyID,(SELECT FROM_UNIXTIME(FromTime)) as FromTime,(SELECT FROM_UNIXTIME(ToTime)) as ToTime,Valid from  Schedule;
+ 
+drop function get_nearest_schedule;
+DELIMITER $$
+create function get_nearest_schedule (regnum varchar(10),time bigint)  RETURNS varchar(8)
+BEGIN
+DECLARE Schedule_ID varchar(8) DEFAULT '';
+select `ScheduleID` into Schedule_ID from (select abs(`FromTime`-30300),`ScheduleID` from `Schedule` WHERE `ScheduleID` in (select `ScheduleID` from `Schedule` where `BusJourneyID` in (select `BusJourneyID` from `Busjourney` where RegNumber='NA-0001')) order by 1 limit 1) b ;
+RETURN Schedule_ID;
+end$$
+DELIMITER ;
 
 delimiter //
 drop trigger if exists BusJourney_check1 //
