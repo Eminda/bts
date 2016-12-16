@@ -128,7 +128,7 @@ create view publicSchedule as
      select ScheduleID, BusJourneyID, FromTown, (SELECT FROM_UNIXTIME(FromTime)) as FromTime,(SELECT FROM_UNIXTIME(ToTime)) as ToTime from  Schedule where Valid = b'1';
  
 create view BookingSchedule as 
-select s.scheduleID,b.RegNumber,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,j.Duration from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
+select distinct(s.scheduleID),b.RegNumber,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,abs((select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=toTownID)-(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=fromTownID))  from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
 
 
 drop function get_nearest_schedule;
