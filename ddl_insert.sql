@@ -88,11 +88,12 @@ create table Schedule(
 	FOREIGN KEY(BusJourneyID) REFERENCES BusJourney(BusJourneyID),
 	FOREIGN KEY(FromTown) REFERENCES Location(TownID)
 );
+#State is varchar because guessed several states may come due to paypal informations
 create table Booking(
 	TicketNo varchar(10),
 	ScheduleID varchar(8),
-	CustomerName varchar(150) not null default 'Valid',
-	State varchar(10) not null,
+	CustomerName varchar(150) not null,
+	State varchar(10) not null default 'Valid',
 	Nic varchar(10) not null,
 	Email varchar(150) not null,
 	Payment Numeric(4,2), 
@@ -103,6 +104,12 @@ create table Booking(
 	FOREIGN KEY(ScheduleID) REFERENCES Schedule(ScheduleID),
 	FOREIGN KEY(FromTown) REFERENCES Location(TownID),
 	FOREIGN KEY(ToTown) REFERENCES Location(TownID)
+);
+create table BookingSeats(
+	TicketNo varchar(10),
+	SeatNumber int,
+	PRIMARY KEY(TicketNo,SeatNumber),
+	FOREIGN KEY(TicketNo) REFERENCES Booking(TicketNo)
 );
 create table Admin (
 	AdminID varchar(4),
@@ -141,6 +148,27 @@ RETURN Schedule_ID;
 end$$
 DELIMITER ;
 
+delimiter //
+drop trigger if exists BookingSeat_check1 //
+create trigger BookingSeat_check1 before insert on BookingSeats 
+	for each row
+	begin
+		if  (exists (select TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+			signal sqlstate '45001' set message_text = 'Seats are already booked';
+		end if;
+	end //
+delimiter ;
+
+delimiter //
+drop trigger if exists BookingSeat_check2 //
+create trigger BookingSeat_check2 before update on BookingSeats 
+	for each row
+	begin
+		if  (exists (select TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+			signal sqlstate '45001' set message_text = 'Seats are already booked';
+		end if;
+	end //
+delimiter ;
 
 delimiter //
 drop trigger if exists BusJourney_check1 //
