@@ -176,7 +176,7 @@ drop trigger if exists BookingSeat_check1 //
 create trigger BookingSeat_check1 before insert on BookingSeats 
 	for each row
 	begin
-		if  (exists (select TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
 			signal sqlstate '45001' set message_text = 'Seats are already booked';
 		end if;
 	end //
@@ -187,7 +187,7 @@ drop trigger if exists BookingSeat_check2 //
 create trigger BookingSeat_check2 before update on BookingSeats 
 	for each row
 	begin
-		if  (exists (select TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
 			signal sqlstate '45001' set message_text = 'Seats are already booked';
 		end if;
 	end //
