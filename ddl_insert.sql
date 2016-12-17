@@ -171,23 +171,25 @@ create view BookingSchedule as
 select distinct(s.scheduleID),b.RegNumber,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,s.FromInt,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.ToInt,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=toTownID) as ToDistance,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=fromTownID) as FromDistance,(select duration from Busjourney bj where j.BusJourneyID=bj.BusJourneyID) as duration,abs((select ToDistance)-(select FromDistance)) as Distance from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
 
 
+
 delimiter //
 drop trigger if exists BookingSeat_check1 //
 create trigger BookingSeat_check1 before insert on BookingSeats 
 	for each row
 	begin
-		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=b.TicketNo limit 1)))) then
 			signal sqlstate '45001' set message_text = 'Seats are already booked';
 		end if;
 	end //
 delimiter ;
+
 
 delimiter //
 drop trigger if exists BookingSeat_check2 //
 create trigger BookingSeat_check2 before update on BookingSeats 
 	for each row
 	begin
-		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=bs.TicketNo limit 1)))) then
+		if  (exists (select bo.TicketNo from Booking bo,BookingSeats bos where bo.TicketNo=bos.TicketNo and bos.SeatNumber=New.SeatNumber and bo.ScheduleID=((select ScheduleID from BookingSeats bs,Booking b where NEW.TicketNo=b.TicketNo limit 1)))) then
 			signal sqlstate '45001' set message_text = 'Seats are already booked';
 		end if;
 	end //
