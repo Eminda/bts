@@ -119,7 +119,7 @@ create table Admin (
 	Primary Key(AdminID)
 );
 
-drop function get_nearest_schedule;
+drop function if exists get_nearest_schedule;
 DELIMITER $$
 create function get_nearest_schedule (regnum varchar(10),time bigint)  RETURNS varchar(8)
 BEGIN
