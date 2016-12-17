@@ -168,8 +168,7 @@ create view publicSchedule as
      select ScheduleID, BusJourneyID, FromTown, (SELECT FROM_UNIXTIME(FromTime)) as FromTime,FromTime as FromInt,(SELECT FROM_UNIXTIME(ToTime)) as ToTime,ToTime as ToInt from  Schedule where Valid = b'1';
  
 create view BookingSchedule as 
-select distinct(s.scheduleID),b.RegNumber,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,s.FromInt,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.ToInt,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,abs((select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=toTownID)-(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=fromTownID)) as Distance,(select duration from Busjourney bj where j.BusJourneyID=bj.BusJourneyID) as duration  from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
-
+select distinct(s.scheduleID),b.RegNumber,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,s.FromInt,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.ToInt,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=toTownID) as ToDistance,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=fromTownID) as FromDistance,(select duration from Busjourney bj where j.BusJourneyID=bj.BusJourneyID) as duration,abs((select ToDistance)-(select FromDistance)) as Distance from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
 
 
 delimiter //
