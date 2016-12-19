@@ -153,6 +153,19 @@ RETURN ToTownID;
 end$$
 DELIMITER ;
 
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS myProcedure //
+
+CREATE PROCEDURE
+  getSeatInBus( num INT )
+BEGIN
+SELECT @row := @row + 1 as sequence FROM (select 0 union all select 1 union all select 3 union all select 4 union all select 5 union all select 6 union all select 6 union all select 7 union all select 8 union all select 9) t, (select 0 union all select 1 union all select 3 union all select 4 union all select 5 union all select 6 union all select 6 union all select 7 union all select 8 union all select 9) t2, (SELECT @row:=0) t_init limit num;
+END //
+
+DELIMITER ;
+
+
 create view publicBus 
 	as 
 	select RegNumber,phoneNumber,NoSeat,Type,wifi,haveCurtains from bus;
