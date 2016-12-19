@@ -158,7 +158,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS getSeatInBus //
 
 CREATE PROCEDURE
-  getSeatInBus( num seat,s varchar(8) )
+  getSeatInBus( seat INT,s varchar(8) )
 BEGIN
 select sequence from (SELECT @row := @row + 1 as sequence FROM (select 0 union all select 1 union all select 3 union all select 4 union all select 5 union all select 6 union all select 6 union all select 7 union all select 8 union all select 9) t, (select 0 union all select 1 union all select 3 union all select 4 union all select 5 union all select 6 union all select 6 union all select 7 union all select 8 union all select 9) t2, (SELECT @row:=0) t_init limit seat) as y where sequence not in(select SeatNumber from bookingSeats bs,booking b where bs.TicketNo=b.TicketNo and ScheduleID=s);
 END //
