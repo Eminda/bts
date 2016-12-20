@@ -183,6 +183,61 @@ create view publicSchedule as
 create view BookingSchedule as 
 select distinct(s.scheduleID),b.RegNumber,j.RouteID,b.PhoneNumber,b.NoSeat,b.Type,b.wifi,b.haveCurtains,s.FromTime,s.FromInt,lf.TownName as FromTownName,s.FromTown as FromTownID,s.ToTime,s.ToInt,s.BusJourneyID,get_To_TownID(s.BusJourneyID,s.FromTown) as toTownID,(select tf.townName from Location tf  where toTownID=tf.TownID) as ToTownName,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=toTownID) as ToDistance,(select distance from RouteDestination r where j.RouteID=r.RouteID and r.TownID=fromTownID) as FromDistance,(select duration from Busjourney bj where j.BusJourneyID=bj.BusJourneyID) as duration,abs((select ToDistance)-(select FromDistance)) as Distance from PublicSchedule s,BusJourney j,Bus b,Location lf,Location tf where s.BusJourneyID=j.BusJourneyID and j.RegNumber=b.RegNumber and s.FromTown=lf.TownID order by 1;
 
+drop function if exists get_NearestLocationForward;
+DELIMITER $$
+create function get_NearestLocationForward(Schedule_ID varchar(8),time bigInt)  RETURNS varchar(200)
+BEGIN
+DECLARE Distance_val INT(3);
+DECLARE Duration_val bigint;
+DECLARE FromTime_val bigint;
+DECLARE RouteID_val INT(5);
+DECLARE FromDistance_val bigint;
+DECLARE GMPA_LINK_val varchar(200);
+DECLARE temp float;
+DECLARE temp1 float;
+Select FromInt,Duration,Distance,RouteID,FromDistance into FromTime_val,Duration_val,Distance_val,RouteID_val,FromDistance_val from BookingSchedule b where ScheduleID=Schedule_ID limit 1;
+Select GMAPLink,abs(Distance-(((time-FromTime_val)/Duration_val)*Distance_val+FromDistance_val)) into GMPA_LINK_val,temp from RouteDestination r,Location l where r.TownID=l.TownID and RouteID=RouteID_val order by 2 limit 1;
+RETURN GMPA_LINK_val;
+end$$
+DELIMITER ;
+
+
+
+drop function if exists get_NearestLocationBackword;
+DELIMITER $$
+create function get_NearestLocationBackword(Schedule_ID varchar(8),time bigInt)  RETURNS varchar(200)
+BEGIN
+DECLARE Distance_val INT(3);
+DECLARE Duration_val bigint;
+DECLARE FromTime_val bigint;
+DECLARE RouteID_val INT(5);
+DECLARE FromDistance_val bigint;
+DECLARE GMPA_LINK_val varchar(200);
+DECLARE temp float;
+DECLARE temp1 float;
+Select FromInt,Duration,Distance,RouteID,FromDistance into FromTime_val,Duration_val,Distance_val,RouteID_val,FromDistance_val from BookingSchedule b where ScheduleID=Schedule_ID limit 1;
+Select GMAPLink,abs(Distance-(FromDistance_val-((time-FromTime_val)/Duration_val)*Distance_val)),(FromDistance_val-((time-FromTime_val)/Duration_val)*Distance_val) into GMPA_LINK_val,temp,temp1 from RouteDestination r,Location l where r.TownID=l.TownID and RouteID=RouteID_val order by 2 limit 1;
+RETURN GMPA_LINK_val;
+end$$
+DELIMITER ;
+
+drop function if exists get_NearestLocation;
+DELIMITER $$
+create function get_NearestLocation(regnum_val varchar(10),time bigInt)  RETURNS varchar(200)
+BEGIN
+DECLARE Schedule_ID varchar(10);
+DECLARE FromDistance_val bigint;
+DECLARE ToDistance_val bigint;
+DECLARE GMPA_LINK_val varchar(200);
+Select * into Schedule_ID from (select get_nearest_schedule(regnum_val,time)) s;
+Select FromDistance,ToDistance into FromDistance_val,ToDistance_val from bookingSchedule b where ScheduleID=Schedule_ID limit 1;
+IF(FromDistance_val<ToDistance_val)Then
+	Select * into GMPA_LINK_val from (select get_NearestLocationForward(Schedule_ID,time)) k;
+ELSE
+	Select * into GMPA_LINK_val from (select get_NearestLocationBackword(Schedule_ID,time)) p;
+END IF;
+RETURN GMPA_LINK_val;
+end$$
 
 
 delimiter //
