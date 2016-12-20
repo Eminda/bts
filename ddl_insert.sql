@@ -124,7 +124,7 @@ DELIMITER $$
 create function get_nearest_schedule (regnum varchar(10),time bigint)  RETURNS varchar(8)
 BEGIN
 DECLARE Schedule_ID varchar(8) DEFAULT '';
-select `ScheduleID` into Schedule_ID from (select abs(`FromTime`-30300),`ScheduleID` from `Schedule` WHERE `ScheduleID` in (select `ScheduleID` from `Schedule` where `BusJourneyID` in (select `BusJourneyID` from `Busjourney` where RegNumber='NA-0001')) order by 1 limit 1) b ;
+select `ScheduleID` into Schedule_ID from (select abs(`FromTime`-time),`ScheduleID` from `Schedule` WHERE `ScheduleID` in (select `ScheduleID` from `Schedule` where `BusJourneyID` in (select `BusJourneyID` from `Busjourney` where RegNumber='NA-0001')) order by 1 limit 1) b ;
 RETURN Schedule_ID;
 end$$
 DELIMITER ;
